@@ -1,0 +1,4 @@
+pillow
+aiogram == 3
+paramiko
+sqlite3

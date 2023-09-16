@@ -6,6 +6,11 @@ import datetime
 import pytz
 import random
 import subprocess
+import sqlite3
+import paramiko
+import hashlib
+from urllib.parse import urlencode
+
 
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
@@ -16,6 +21,24 @@ from aiogram.utils.markdown import hbold
 from aiogram.utils import markdown
 from aiogram.handlers import CallbackQueryHandler
 
+try:
+    sqlite_connection = sqlite3.connect('hosting.db')
+    cursor = sqlite_connection.cursor()
+    print("База данных создана и успешно подключена к SQLite")
+
+    sqlite_create_table_query = '''
+    CREATE TABLE users (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT);
+    '''
+
+    cursor.execute(sqlite_create_table_query)
+    sqlite_connection.commit()
+
+    cursor.close()
+
+except sqlite3.Error as error:
+    print("Ошибка при подключении к sqlite", error)
 
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN = ("6600281143:AAEUdX9OZ0ahNGJO31udcbxOQlm0XH2rEAQ")
@@ -45,15 +68,48 @@ def start(user_id):
     b.button(text=f"⁉️ Информация о нас",callback_data=f"about:{user_id}")
     b.button(text=f"🪙 Пополнить баланс",callback_data=f"add_pay:{user_id}")
     b.button(text=f"🪄 Пополнить баланс",callback_data=f"buy:{user_id}")
+    b.button(text=f"⚙️ Управление вашими юзерботами",callback_data=f"settings:{user_id}")
     
-    b.adjust(2,2)
+    b.adjust(2,2,1)
     return b.as_markup()
 
 def buy(user_id):
     b = InlineKeyboardBuilder()
-    b.button(text=f"🐙 Ссылка на оплату",callback_data=f"buy_link:{user_id}",url="https://some-buy.ru/")
+    merchant_id = 'df489913-b39e-42d4-ae78-a27572792a0b' # ID Вашего магазина
+    amount = 100 # Сумма к оплате
+    currency = 'RUB' # Валюта заказа
+    secret = '4f9ae210f241b7a45bf767b25fa17a53' # Секретный ключ №1 из настроек магазина
+    order_id = f'{random.randint(1,8973124612874361296128736128367)}' # Идентификатор заказа в Вашей системе
+    desc = user_id # Описание заказа
+    lang = 'ru' # Язык формы
+
+    sign = f':'.join([
+        str(merchant_id),
+        str(amount),
+        str(currency),
+        str(secret),
+        str(order_id)
+    ])
+
+    params = {
+        'merchant_id': merchant_id,
+        'amount': amount,
+        'currency': currency,
+        'order_id': order_id,
+        'sign': hashlib.sha256(sign.encode('utf-8')).hexdigest(),
+        'desc': desc,
+        'lang': lang
+    }
+    b.button(text=f"🐙 Ссылка на оплату",callback_data=f"buy_link:{user_id}",url="https://aaio.io/merchant/pay?" + urlencode(params))
     b.button(text=f"🇺🇦 Оплата в Украине",callback_data=f"buy_ua:{user_id}",url="t.me/tot_882")
     return b.as_markup()
+
+def settings(username,user_id):
+    b = InlineKeyboardBuilder()
+    b.button(text=f"🔴 Выключить",callback_data=f"stop:{username}:{user_id}")
+    b.button(text=f"🟢 Включить",callback_data=f"start:{username}:{user_id}")
+    b.button(text=f"🔘 Перезагрузка",callback_data=f"restart:{username}:{user_id}")
+    return b.as_markup()   
 
 
 
@@ -63,6 +119,14 @@ async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
+    sqlite_insert_query = f"""
+        INSERT INTO users (user_id, username)  VALUES  ({message.from_user.id}, "NULL")
+    """
+    try:
+        cursor.execute(sqlite_insert_query)
+    except Exception:
+        pass
+    sqlite_connection.commit()
 
     now = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
     
@@ -86,18 +150,91 @@ async def command_start_handler(message: Message) -> None:
 
 @router.callback_query()
 async def handler_inline(call: types.CallbackQuery):
-    
+    private_key_path = 'C:/users/nuser/downloads/PON.pem'
     data = call.data.split(":")
     
     if data[0] == "why_we":
         await bot.send_sticker(data[1],rf'{get_stickers("why_we")}')
         await bot.send_message(data[1],"<b>Наш хост не на 🐳 Docker. Преймущество в том что модули, и библеотеки не будут слетать.\n\nАвто рестарт при выключении (через бота выключаться будет)\n\nА хоть это и не совсем преймущество... Но у вас будет 💎 VDS как платформа</b>")
-    elif data[0] == "buy":
+    elif data[0] == "add_pay":
+
+        
         await bot.send_sticker(data[1],rf'{get_stickers("buy")}')
         await bot.send_message(data[1],"<b>Спасибо что вы выбрали именно наш хостинг!\n\nМы используем платежную систему, чтобы деньги зачислялись быстро, и всё происходило автоматически\</b>\n\n<i>p.s Оплата с Украины через другого человека, почему? Потому что в платежной системе большая коммисия.</i>",reply_markup=buy(call.from_user.id))
+
     elif data[0] == "about":
         await bot.send_sticker(data[1],rf'{get_stickers("about")}')
         await bot.send_message(data[1],"<b>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</b>")
+    elif data[0] == "settings":
+        
+        cursor = sqlite_connection.cursor()
+        user_id = call.from_user.id
+        cursor.execute("SELECT username FROM users WHERE user_id=?", (user_id,))
+        row = cursor.fetchone()
+        if row is not None:
+            username = row[0]
+            if username ==  "NULL":
+                await bot.send_message(data[1],"Юзернейм не установлен, пока это всё в ручном режиме")
+                return
+            else:
+                await bot.send_message(data[1],"<b>Управление вашим юзерботом</b>",reply_markup=settings(username,call.from_user.id))
+    
+    elif data[0] == "start":
+        cursor = sqlite_connection.cursor()
+        user_id = call.from_user.id
+        cursor.execute("SELECT username FROM users WHERE user_id=?", (user_id,))
+        row = cursor.fetchone()
+        username = row[0]
+        if username ==  "NULL":
+            return
+        private_key = paramiko.RSAKey.from_private_key_file(private_key_path)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname='54.93.218.140', username='ubuntu',pkey=private_key)
+        stdin, stdout, stderr = client.exec_command('su root')
+        stdin.write('dG90ODgyYXdzYXNzaG9sZQo=\n')
+        stdin, stdout, stderr = client.exec_command(f'systemctl start {username}')
+        print(stdout.read().decode())
+        client.close()
+        await bot.send_message(data[2],"Попытка выключения")
+    elif data[0] == "stop":
+        cursor = sqlite_connection.cursor()
+        user_id = call.from_user.id
+        cursor.execute("SELECT username FROM users WHERE user_id=?", (user_id,))
+        row = cursor.fetchone()
+        username = row[0]
+        if username ==  "NULL":
+            return
+        private_key = paramiko.RSAKey.from_private_key_file(private_key_path)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname='54.93.218.140', username='ubuntu',pkey=private_key)
+        stdin, stdout, stderr = client.exec_command('su root')
+        stdin.write('dG90ODgyYXdzYXNzaG9sZQo=\n')
+        stdin, stdout, stderr = client.exec_command(f'systemctl stop {username}')
+        print(stdout.read().decode())
+        client.close()
+        await bot.send_message(data[2],"Попытка включения")
+    elif data[0] == "restart":
+        cursor = sqlite_connection.cursor()
+        user_id = call.from_user.id
+        cursor.execute("SELECT username FROM users WHERE user_id=?", (user_id,))
+        row = cursor.fetchone()
+        username = row[0]
+        if username ==  "NULL":
+            return
+        private_key = paramiko.RSAKey.from_private_key_file(private_key_path)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname='54.93.218.140', username='ubuntu',pkey=private_key)
+        stdin, stdout, stderr = client.exec_command('su root')
+        stdin.write('dG90ODgyYXdzYXNzaG9sZQo=\n')
+
+        stdin, stdout, stderr = client.exec_command(f'systemctl restart {username}')
+        print(stdout.read().decode())
+        client.close()
+        await bot.send_message(data[2],"Попытка перезагрузки")
+        
     else:
         await bot.send_sticker(data[1],rf'{get_stickers("404")}')
         await bot.send_message(data[1],"<b>Хмм, походу кнопку которую вы нажали не была обработана разработчиками, пожалуйста сообщите об этом @MuRuLOSE</b>")
