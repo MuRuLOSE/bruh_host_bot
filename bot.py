@@ -9,6 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
+from aiogram.utils import markdown
 from aiogram.handlers import CallbackQueryHandler
 import datetime
 import pytz
@@ -23,14 +24,7 @@ dp = Dispatcher()
 bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
 router = Router()
 
-def get_last_commit_hash():
-    try:
-        result = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
-        commit_hash = result.decode('utf-8').strip()
-        return commit_hash
-    except subprocess.CalledProcessError as e:
-        print('Ошибка при выполнении команды Git:', e.output)
-        return None
+
 
 def start(user_id):
     b = InlineKeyboardBuilder()
@@ -72,7 +66,8 @@ async def command_start_handler(message: Message) -> None:
         hi = ["Добрый день", "Хорошего дня", "Удачного дня"]
     else:
         hi = ["Добрый вечер", "Приятного вечера","Приятного отдыха"]
-    await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b>',reply_markup=start(message.from_user.id))
+    git = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
+    await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
 
 @dp.callback_query()
 async def handler_inline(call: types.CallbackQuery):
