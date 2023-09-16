@@ -1,4 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
+from aiogram.types import input_file
+
 
 def linear_gradient(draw, start_color, end_color):
     """Функция для создания градиента"""
@@ -9,16 +11,16 @@ def linear_gradient(draw, start_color, end_color):
         b = start_color[2] + (end_color[2] - start_color[2]) * y // height
         draw.line((0, y, width, y), fill=(r, g, b))
 
-def gen_banner(hi,username):
+def gen_banner(hi,username,user_id,avatar):
     # Открываем изображение аватарки
-    avatar = Image.open("avatar.png")
+    avatar = Image.open(avatar)
 
     # Уменьшаем размер аватарки в два раза
-    new_avatar_size = (avatar.width // 2, avatar.height // 2)
+    new_avatar_size = (avatar.width // 1, avatar.height // 1)
     avatar = avatar.resize(new_avatar_size)
 
     # Создаем новое изображение с заданными размерами
-    width, height = 1500, 650
+    width, height = 750, 350
     image = Image.new("RGB", (width, height), (255, 255, 255))
     mask = Image.new("L", avatar.size, 0)
     mask_ellipse = ImageDraw.Draw(mask)
@@ -39,7 +41,7 @@ def gen_banner(hi,username):
 
     # Задаем координаты для аватарки по центру внизу
     avatar_x = int((width - avatar.width) / 2)
-    avatar_y = height - avatar.height - radius
+    avatar_y = int((height - avatar.height - 2 * radius) / 1.5) + 20
 
     # Рисуем округленный прямоугольник
     draw.rounded_rectangle([(avatar_x, avatar_y), (avatar_x + avatar.width, avatar_y + avatar.height)], radius, fill=(255, 255, 255))
@@ -51,29 +53,21 @@ def gen_banner(hi,username):
     # Открываем шрифт для никнейма и переменной "ad"
     font = ImageFont.truetype("Comfortaa-Bold.ttf", 36)
 
-    # Задаем координаты для переменной "ad"
-    ad_x = int(width / 2)
-    ad_y = avatar_y - 70
 
     # Задаем координаты для имени пользователя
     username_x = int(width / 2)
-    username_y = avatar_y + avatar.height + 40
+    username_y = avatar_y + avatar.height + 50
 
     # Задаем текст и цвет для переменной "ad"
-    ad_text = f"{hi}, {username}"
-    ad_color = "white"
 
     # Задаем текст и цвет для имени пользователя
-    username_text = username
+    username_text = f"{hi}, {username}"
     username_color = "white"
 
-    # Рисуем текст переменной "ad"
-    draw.text((ad_x, ad_y), ad_text, font=font, fill=ad_color, anchor="mm")
 
     # Рисуем текст имени пользователя
     draw.text((username_x, username_y), username_text, font=font, fill=username_color, anchor="mm")
 
     # Сохраняем изображение
-    image.save("result_image.png")
-
-gen_banner("С добрым утром ","MuRuLOSE")
+    image.save(f"avatars/result_image_{user_id}.png")
+    return input_file.FSInputFile(f"avatars/result_image_{user_id}.png")

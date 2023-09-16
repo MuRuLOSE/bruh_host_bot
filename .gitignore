@@ -160,7 +160,6 @@ cython_debug/
 #.idea/
 
 hosting.db
-result_image.png 
-avatar.png 
+avatars/
 
 

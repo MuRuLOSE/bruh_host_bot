@@ -10,8 +10,9 @@ import sqlite3
 import paramiko
 import hashlib
 from urllib.parse import urlencode
+from hello import gen_banner
 
-
+from aiogram.types import UserProfilePhotos
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -119,6 +120,7 @@ async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
+    user_profile_photo = await bot.get_user_profile_photos(user_id=message.from_user.id, offset=0, limit=1)
     sqlite_insert_query = f"""
         INSERT INTO users (user_id, username)  VALUES  ({message.from_user.id}, "NULL")
     """
@@ -144,9 +146,16 @@ async def command_start_handler(message: Message) -> None:
         hi = ["Добрый вечер", "Приятного вечера","Приятного отдыха"]
 
     git = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
-
     await message.answer_sticker(rf'{get_stickers("hi")}' )
-    await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
+    if len(user_profile_photo.photos) > 0:
+        file = await bot.get_file(user_profile_photo.photos[0][0].file_id)
+        await bot.download_file(file.file_path, f'avatars/avatar_{message.from_user.id}.png')
+
+        await message.answer_photo(photo=gen_banner(username=message.from_user.first_name,user_id=message.from_user.id,hi=random.choice(hi),avatar=f"avatars/avatar_{message.from_user.id}"),caption=f'<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
+    else:
+        await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
+    
+    
 
 @router.callback_query()
 async def handler_inline(call: types.CallbackQuery):
