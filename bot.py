@@ -57,8 +57,8 @@ def buy(user_id):
 
 
 
-@dp.message(CommandStart())
-@dp.message(F.text.lower=="старт" or "привет")
+@router.message(CommandStart())
+@router.message(F.text.lower=="старт" or "привет")
 async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
@@ -84,7 +84,7 @@ async def command_start_handler(message: Message) -> None:
     await message.answer_sticker(rf'{get_stickers("hi")}' )
     await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
 
-@dp.callback_query()
+@router.callback_query()
 async def handler_inline(call: types.CallbackQuery):
     
     data = call.data.split(":")
@@ -103,7 +103,7 @@ async def handler_inline(call: types.CallbackQuery):
         await bot.send_message(data[1],"<b>Хмм, походу кнопку которую вы нажали не была обработана разработчиками, пожалуйста сообщите об этом @MuRuLOSE</b>")
     
 
-@dp.message()
+@router.message()
 async def echo_handler(message: types.Message) -> None:
     commands = ['/start','старт','привет']
     if message.text.lower not in commands:
@@ -112,11 +112,15 @@ async def echo_handler(message: types.Message) -> None:
 
 
 async def main() -> None:
+    # Dispatcher is a root router
+    dp = Dispatcher()
+    # ... and all other routers should be attached to Dispatcher
+    dp.include_router(router)
+
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     # And the run events dispatching
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
