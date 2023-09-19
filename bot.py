@@ -23,24 +23,7 @@ from aiogram.utils.markdown import hbold
 from aiogram.utils import markdown
 from aiogram.handlers import CallbackQueryHandler
 
-try:
-    sqlite_connection = sqlite3.connect('hosting.db')
-    cursor = sqlite_connection.cursor()
-    print("База данных создана и успешно подключена к SQLite")
 
-    sqlite_create_table_query = '''
-    CREATE TABLE users (
-        user_id INTEGER PRIMARY KEY,
-        username TEXT);
-    '''
-
-    cursor.execute(sqlite_create_table_query)
-    sqlite_connection.commit()
-
-    cursor.close()
-
-except sqlite3.Error as error:
-    print("Ошибка при подключении к sqlite", error)
 
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN = ("6600281143:AAEUdX9OZ0ahNGJO31udcbxOQlm0XH2rEAQ")
