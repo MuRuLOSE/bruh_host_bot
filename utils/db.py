@@ -13,7 +13,5 @@ try:
     cursor.execute(sqlite_create_table_query)
     sqlite_connection.commit()
 
-    cursor.close()
-
 except sqlite3.Error as error:
     print("Ошибка при подключении к sqlite", error)

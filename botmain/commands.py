@@ -7,9 +7,24 @@ from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 from aiogram.utils import markdown
 from aiogram.handlers import CallbackQueryHandler
+import asyncio
+import logging
+import sys
+import base64
+import datetime
+import pytz
+import random
+import subprocess
+import sqlite3
+import paramiko
+import hashlib
+from urllib.parse import urlencode
+from utils import hello
+from botmain import commands, inline_data, inline_handler 
 
-from ..utils import hello
-from ..utils.stickers import get_stickers
+from utils import stickers, db
+from .main import bot
+
 
 router = Router()
 
@@ -17,7 +32,8 @@ router = Router()
 @router.message(CommandStart())
 @router.message(F.text.lower=="старт" or "привет")
 async def command_start_handler(message: Message) -> None:
-
+    cursor = db.cursor
+    sqlite_connection = db.sqlite_connection
     user_profile_photo = await bot.get_user_profile_photos(user_id=message.from_user.id, offset=0, limit=1)
     sqlite_insert_query = f"""
     INSERT INTO users (user_id, username)  
@@ -47,7 +63,7 @@ async def command_start_handler(message: Message) -> None:
 
     git = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
 
-    await message.answer_sticker(rf'{get_stickers("hi")}' )
+    await message.answer_sticker(rf'{stickers.get_stickers("hi")}' )
 
     if len(user_profile_photo.photos) > 0:
         file = await bot.get_file(user_profile_photo.photos[0][0].file_id)
