@@ -1,4 +1,4 @@
-def get_stickers(sticker) -> str:
+def get_stickers(sticker):
     stickers ={
         "hi": "CAACAgIAAxkBAAEBFIBlBYCy4MukVlSIr49yQkUcB5KqugAC8iwAAnDW4UuITBkIiCOD3zAE",
         "why_we": "CAACAgIAAxkBAAEBFJllBYwOMvkcW-jc-jqUySGkj-itrAACsDEAAuQ-2Ese8oqM19kLbDAE",
@@ -7,3 +7,4 @@ def get_stickers(sticker) -> str:
         "404": "CAACAgIAAxkBAAEBFMdlBZJiKFR3-TUqvEKpZ0N9xrTTYQACXioAAnjx2Es23p3FQ7sh_jAE"
 
     }
+    return stickers.get(sticker)

@@ -70,4 +70,4 @@ def gen_banner(hi,username,user_id,avatar):
 
     # Сохраняем изображение
     image.save(f"avatars/result_image_{user_id}.png")
-    return input_file.FSInputFile(f"avatars/result_image_{user_id}.png")
+    return input_file.FSInputFile(path=f"avatars/result_image_{user_id}.png")

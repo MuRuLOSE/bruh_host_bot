@@ -11,7 +11,8 @@ import paramiko
 import hashlib
 from urllib.parse import urlencode
 from utils import hello
-from botmain import commands, inline_data, inline_handler 
+from botmain import commands, inline_data, inline_handler, fsm
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from aiogram.types import UserProfilePhotos
 from aiogram import Bot, Dispatcher, Router, types, F
@@ -35,11 +36,12 @@ router = Router()
 
 async def main() -> None:
     # Dispatcher is a root router
-    dp = Dispatcher()
+    dp = Dispatcher(storage=MemoryStorage())
     # ... and all other routers should be attached to Dispatcher
     dp.include_router(router)
     dp.include_router(inline_handler.router)
     dp.include_router(commands.router)
+    dp.include_router(fsm.router)
 
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)

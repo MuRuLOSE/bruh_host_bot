@@ -2,7 +2,7 @@ from aiogram.types import UserProfilePhotos
 from aiogram import Bot, Dispatcher, Router, types, F
 from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 from aiogram.utils import markdown
@@ -16,11 +16,13 @@ import pytz
 import random
 import subprocess
 import sqlite3
-import paramiko
 import hashlib
 from urllib.parse import urlencode
 from utils import hello
-from botmain import commands, inline_data, inline_handler 
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from .inline_data import *
+from botmain import commands, inline_data, inline_handler
 
 from utils import stickers, db
 from .main import bot
@@ -28,9 +30,7 @@ from .main import bot
 
 router = Router()
 
-
-@router.message(CommandStart())
-@router.message(F.text.lower=="старт" or "привет")
+@router.message(Command("start") or F.text.lower==".ыефке" or "юыефке")
 async def command_start_handler(message: Message) -> None:
     cursor = db.cursor
     sqlite_connection = db.sqlite_connection
@@ -69,11 +69,10 @@ async def command_start_handler(message: Message) -> None:
         file = await bot.get_file(user_profile_photo.photos[0][0].file_id)
 
         await bot.download_file(file.file_path, f'avatars/avatar_{message.from_user.id}.png')
-
-        await message.answer_photo(photo=hello.gen_banner(username=message.from_user.first_name,user_id=message.from_user.id,hi=random.choice(hi),avatar=f"avatars/avatar_{message.from_user.id}.png"),caption=f'<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
+        await message.answer_photo(photo=hello.gen_banner(username=message.from_user.first_name,user_id=message.from_user.id,hi=random.choice(hi),avatar=f"avatars/avatar_{message.from_user.id}.png"),caption=f'<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=inline_data.start(message.from_user.id))
 
     else:
-        await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=start(message.from_user.id))
+        await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=inline_data.start(message.from_user.id))
 
 
 @router.message()

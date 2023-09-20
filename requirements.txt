@@ -1,4 +1,4 @@
 pillow
 aiogram == 3
-paramiko
+asyncssh
 sqlite3
