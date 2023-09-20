@@ -51,7 +51,7 @@ def gen_banner(hi,username,user_id,avatar):
     image.paste(avatar, (avatar_x, avatar_y), mask=mask)
 
     # Открываем шрифт для никнейма и переменной "ad"
-    font = ImageFont.truetype("Comfortaa-Bold.ttf", 36)
+    font = ImageFont.truetype("ttf/Comfortaa-Bold.ttf", 36)
 
 
     # Задаем координаты для имени пользователя
