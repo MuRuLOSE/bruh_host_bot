@@ -8,7 +8,7 @@ def start(user_id):
     b.button(text=f"❓ Наши преймущества",callback_data=f"why_we:{user_id}")
     b.button(text=f"⁉️ Информация о нас",callback_data=f"about:{user_id}")
     b.button(text=f"🪙 Пополнить баланс",callback_data=f"buy:{user_id}")
-    b.button(text=f"🪄 Пополнить баланс",callback_data=f"buy_host:{user_id}")
+    b.button(text=f"🪄 Купить хостинг",callback_data=f"buy_host:{user_id}")
     b.button(text=f"⚙️ Управление вашими юзерботами",callback_data=f"settings:{user_id}")
     
     b.adjust(2,2,1)
@@ -50,4 +50,9 @@ def buy(user_id,bal):
     }
     b.button(text=f"🐙 Ссылка на оплату",callback_data=f"buy_link:{user_id}",url="https://aaio.io/merchant/pay?" + urlencode(params))
     b.button(text=f"🇺🇦 Оплата в Украине",callback_data=f"buy_ua:{user_id}",url="t.me/tot_882")
+    return b.as_markup()
+
+def buy_host(user_id):
+    b = InlineKeyboardBuilder()
+    b.button(text="🛒 Оплатить хостинг (75 рублей/мес)",callback_data=f"buy_hosting:{user_id}")
     return b.as_markup()

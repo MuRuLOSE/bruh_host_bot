@@ -7,6 +7,7 @@ try:
     sqlite_create_table_query = '''
     CREATE TABLE IF NOT EXISTS users (
         user_id INTEGER PRIMARY KEY,
+        money INTEGER,
         username TEXT);
     '''
 

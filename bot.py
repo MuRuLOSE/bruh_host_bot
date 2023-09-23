@@ -38,10 +38,11 @@ async def main() -> None:
     # Dispatcher is a root router
     dp = Dispatcher(storage=MemoryStorage())
     # ... and all other routers should be attached to Dispatcher
-    dp.include_router(router)
-    dp.include_router(inline_handler.router)
-    dp.include_router(commands.router)
     dp.include_router(fsm.router)
+    dp.include_router(commands.router)
+    dp.include_router(inline_handler.router)
+    
+    
 
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)

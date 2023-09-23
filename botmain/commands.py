@@ -36,8 +36,8 @@ async def command_start_handler(message: Message) -> None:
     sqlite_connection = db.sqlite_connection
     user_profile_photo = await bot.get_user_profile_photos(user_id=message.from_user.id, offset=0, limit=1)
     sqlite_insert_query = f"""
-    INSERT INTO users (user_id, username)  
-    SELECT {message.from_user.id}, "NULL"
+    INSERT INTO users (user_id, username, money)  
+    SELECT {message.from_user.id}, "NULL", 0
     WHERE NOT EXISTS (
         SELECT 1 FROM users WHERE user_id = {message.from_user.id}
     )
@@ -75,6 +75,35 @@ async def command_start_handler(message: Message) -> None:
         await message.answer(f'<b>{random.choice(hi)}</b>, <i>{message.from_user.first_name}</i>\n<b>Наш хостинг стабильный, дешевый и имеет свои преймущества.</b> #{git[:7]}',reply_markup=inline_data.start(message.from_user.id))
 
 
+@router.message(Command("pay"))
+async def command_pay_handler(message: types.Message) -> None:
+    cursor = db.cursor
+    if message.from_user.id != 5047574160:
+        return
+    
+    args = message.text.split()[1:]
+    if args == []:
+        await message.answer("<b>Укажите id и сумму пополнения <code>/pay 5047574160 1100</code> пример</b>")
+    try:
+        args[1]
+    except IndexError:
+        await message.answer("<b>Не указана сумма денег</b>")
+    else:
+        cursor.execute("SELECT money FROM users WHERE user_id=?", (args[0],))
+        row = cursor.fetchone()
+        money = int(args[1])+int(row[0])
+        cursor.execute("UPDATE users SET money = ? WHERE user_id = ?", (money, args[0]))
+
+@router.message(Command("bal"))
+async def command_bal_handler(message: types.Message) -> None:
+    cursor = db.cursor
+    cursor.execute("SELECT money FROM users WHERE user_id=?", (message.from_user.id,))
+    row = cursor.fetchone()
+    await message.answer(f"<b>Ваши деньги: {row[0]}</b>")
+
+        
+
 @router.message()
 async def echo_handler(message: types.Message) -> None:
     pass
+
