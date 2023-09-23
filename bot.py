@@ -7,7 +7,6 @@ import pytz
 import random
 import subprocess
 import sqlite3
-import paramiko
 import hashlib
 from urllib.parse import urlencode
 from utils import hello

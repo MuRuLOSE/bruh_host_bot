@@ -8,7 +8,9 @@ import json
 
 router = Router()
 
-nicknames = []
+
+with open('nicknames.json', 'r', encoding='utf-8') as f:
+    nicknames = json.load(f)
 
 
 class OrderFood(StatesGroup):
@@ -35,7 +37,8 @@ async def nickname_chosen(message: Message, state: FSMContext):
     )
     nicknames.append(message.text.lower())
     with open('nicknames.json', 'w') as f:
-        json.dump(nicknames, f)
+        json.dump(nicknames, f,ensure_ascii=False)
+    await state.clear()
 
 
 @router.message(OrderFood.choosing_nickname)
@@ -46,7 +49,8 @@ async def nickname_chosen_incorecctly(message: Message):
 
 @router.message(Command("cancel"))
 async def cancel(message: Message, state: FSMContext):
-    state.clear()
+    await state.clear()
+    await message.answer("Отмена выбора.")
 
 # Этап выбора размера порции и отображение сводной информации #
 
